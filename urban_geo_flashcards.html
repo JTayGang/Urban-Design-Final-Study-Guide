@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Geography Flashcards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .progress {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .topic-filter {
+            margin-bottom: 20px;
+        }
+        
+        .topic-filter select {
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 8px;
+            border: none;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 700px;
+            height: 450px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+        
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-front {
+            background: white;
+        }
+        
+        .card-back {
+            background: #f8f9fa;
+            transform: rotateY(180deg);
+        }
+        
+        .card-topic {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .card-text {
+            font-size: 1.4em;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .card-back .card-text {
+            font-size: 1.2em;
+            color: #555;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-prev {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-next {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-shuffle {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .flip-hint {
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Urban Geography Final Exam</h1>
+        <div class="progress">Card <span id="current">1</span> of <span id="total">0</span></div>
+        <div class="topic-filter">
+            <select id="topicSelect">
+                <option value="all">All Topics</option>
+                <option value="13">Topic 13: High Tech & Megalopolis</option>
+                <option value="14">Topic 14: Metropolitan Statistical Areas</option>
+                <option value="19">Topic 19: Central Place Theory</option>
+                <option value="20">Topic 20: Urban Transportation</option>
+                <option value="21">Topic 21: Density Gradients</option>
+                <option value="22">Topic 22: Urban Land Use</option>
+            </select>
+        </div>
+        <div class="flip-hint">Click card to flip</div>
+    </div>
+    
+    <div class="card-container">
+        <div class="card" id="flashcard">
+            <div class="card-face card-front">
+                <div class="card-topic" id="frontTopic"></div>
+                <div class="card-text" id="question"></div>
+            </div>
+            <div class="card-face card-back">
+                <div class="card-topic" id="backTopic"></div>
+                <div class="card-text" id="answer"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button class="btn-prev" onclick="prevCard()">← Previous</button>
+        <button class="btn-shuffle" onclick="shuffleCards()">🔀 Shuffle</button>
+        <button class="btn-next" onclick="nextCard()">Next →</button>
+    </div>
+
+    <script>
+        const allCards = [
+            // Topic 13
+            { topic: "13", q: "Where are smart jobs highly concentrated?", a: "Selected metros, especially the San Francisco metro area" },
+            { topic: "13", q: "What are the key characteristics of the San Francisco metro area for tech jobs?", a: "Skilled labor, new firms, networks of firms, global connections (especially Asia), venture capital, and other supportive features" },
+            { topic: "13", q: "What is Jan Gottman's Megalopolis?", a: "The densely populated northeastern urban corridor from Boston to Washington DC" },
+            { topic: "13", q: "What is unique about some new entrants to the top 20 largest U.S. metros starting in 1950?", a: "They are not on a navigable waterway (e.g., Dallas, Phoenix, Atlanta, Denver)" },
+            { topic: "13", q: "What's the big message about 'Most Prosperous Metros' in recent years?", a: "They haven't boomed in population - prosperity doesn't necessarily equal rapid population growth" },
+            
+            // Topic 14
+            { topic: "14", q: "What is a Metropolitan Statistical Area (MSA)?", a: "A geographic entity defined by the Census Bureau consisting of a core urban area with at least 50,000 population plus adjacent counties with strong commuting flows" },
+            { topic: "14", q: "What is the minimum threshold population for the core municipality of an MSA?", a: "50,000" },
+            { topic: "14", q: "What is the principle rule for including adjacent and outlying counties in an MSA?", a: "Strong commuting flows to the core area" },
+            { topic: "14", q: "Can a metro be just one county?", a: "Yes, metros can be one county or collections of counties" },
+            { topic: "14", q: "What are census tracts?", a: "Subregions of a metro area" },
+            
+            // Topic 19
+            { topic: "19", q: "What does Central Place Theory explain?", a: "The spatial arrangement, size, and number of settlements" },
+            { topic: "19", q: "What is the main function of cities in Central Place Theory?", a: "Centers for the distribution of goods (retailing) and consumer services" },
+            { topic: "19", q: "What is the range-of-a-good?", a: "The maximum distance consumers will travel to purchase a good or service" },
+            { topic: "19", q: "What is threshold population?", a: "The minimum feasible population size within an establishment's market area needed to support the supply of the good" },
+            { topic: "19", q: "What is a complementary region?", a: "The market area served by a central place - all consumers within this area go to the same central place" },
+            { topic: "19", q: "What shape is used to represent market areas in Central Place Theory?", a: "Hexagons" },
+            { topic: "19", q: "What does k=3 represent in Central Place Theory?", a: "Marketing Principle - a complementary region is 3 times the size of the next smallest level" },
+            { topic: "19", q: "What does k=4 represent in Central Place Theory?", a: "Transportation Principle - accounts for roads connecting central places" },
+            { topic: "19", q: "What does k=7 represent in Central Place Theory?", a: "Administrative Principle - used to keep sub-regions together (e.g., 7 small primary schools funneling into one secondary school)" },
+            { topic: "19", q: "What is a higher order good?", a: "A good requiring a higher threshold population and larger market area (complementary region)" },
+            { topic: "19", q: "How do larger cities relate spatially to smaller ones in Central Place Theory?", a: "Larger cities tend to lie farther apart compared with smaller ones, and there are far fewer large cities" },
+            
+            // Topic 20
+            { topic: "20", q: "What was the shape of the preindustrial pedestrian city?", a: "Largely circular" },
+            { topic: "20", q: "What was the earliest regularly scheduled public transportation in cities?", a: "Horse drawn omnibus (on city streets, not on rails)" },
+            { topic: "20", q: "What was the biggest 19th century urban transportation revolution?", a: "The electric streetcar (c. 1890)" },
+            { topic: "20", q: "What urban form bias did streetcars create?", a: "Radial bias - 'city as a star' or 'starfish' pattern, with development favored along streetcar lines" },
+            { topic: "20", q: "What is the key difference between streetcars and rapid transit in terms of right-of-way?", a: "Streetcars shared the street with other traffic; rapid transit has its own dedicated right-of-way" },
+            { topic: "20", q: "What type of suburbs developed around commuter rail stations?", a: "High income suburban rail suburbs with nodes of development around stations (e.g., Philadelphia's Main Line)" },
+            { topic: "20", q: "Did electric streetcars only exist in large cities?", a: "No, they existed in smaller cities too (Phoenix, Appleton, Richmond, etc.)" },
+            { topic: "20", q: "What was the primary mode of intra-urban freight delivery in the early 1900s?", a: "Horse and wagon" },
+            { topic: "20", q: "What does 'third rail' indicate about a transit system?", a: "It has its own right-of-way and doesn't share routes with other traffic (rapid/mass transit)" },
+            
+            // Topic 21
+            { topic: "21", q: "What is Clark's population density gradient model?", a: "A negative exponential relationship showing how population density decreases with distance from the CBD" },
+            { topic: "21", q: "What does 'b' represent in the density gradient equation?", a: "The slope of the density gradient - how quickly density decreases with distance from the center" },
+            { topic: "21", q: "What does D0 represent in the density gradient equation?", a: "The density in the CBD (the Y-intercept)" },
+            { topic: "21", q: "What is Newling's central crater?", a: "The phenomenon where population density in the very center (CBD) is actually lower than in surrounding areas due to commercial land use" },
+            { topic: "21", q: "What are outlying density rims?", a: "Areas of higher population density that occur in rings outside the city center" },
+            { topic: "21", q: "What is the relationship between city age and average density in the U.S.?", a: "Older cities tend to have higher central densities, related to the transportation era when they reached 50,000 population" },
+            { topic: "21", q: "What has happened to U.S. city densities since the 1940s?", a: "Densities have been converging - cities are becoming more alike in overall population densities, and age has become less important" },
+            { topic: "21", q: "What are the keys to Detroit's decline?", a: "Manufacturing job losses, white flight, and bad planning (especially freeways)" },
+            { topic: "21", q: "Where has growth occurred in the Detroit metro area?", a: "In the suburbs while the central city decays" },
+            { topic: "21", q: "What are the four zones to understand Chicago?", a: "The Loop (downtown), outer city neighborhoods, inner ring Cook County suburbs, and outer suburban counties" },
+            { topic: "21", q: "Why might people want to live in Chicago's Loop?", a: "Amenities, reduced transportation costs, and proximity to some of the best jobs in Chicago" },
+            { topic: "21", q: "How has Phoenix been 'bucking the trend' regarding density gradients?", a: "Densities in Phoenix are increasing in many central city census tracts" },
+            { topic: "21", q: "Which world region has the densest cities?", a: "Asian cities" },
+            { topic: "21", q: "Why are American cities less dense than European cities?", a: "Various factors including automobile dependence, abundant land, different planning traditions, and suburban preferences" },
+            { topic: "21", q: "What is meant by the 'social value' of undeveloped land?", a: "The value to society of keeping land undeveloped (ecosystem services, recreation, etc.) rather than its market value for development" },
+            
+            // Topic 22
+            { topic: "22", q: "What are the four locational forces driving urban land use and land value?", a: "Accessibility, amenities, externalities, and zoning/land use regulations" },
+            { topic: "22", q: "What is the single driving force in the Alonso-Mills-Muth model?", a: "Distance of a parcel of land from the CBD" },
+            { topic: "22", q: "Where are offices, manufacturing, and residential areas located in the monocentric city model?", a: "Offices in CBD, manufacturing a little further out, residential furthest out" },
+            { topic: "22", q: "Why do offices locate in the CBD?", a: "Face-to-face communication of decision makers and the need for central locations" },
+            { topic: "22", q: "What is a bid-rent curve?", a: "A curve showing the willingness to pay (rent) for land at different distances from the CBD for a particular land use" },
+            { topic: "22", q: "Why are high-rise skyscrapers built in the CBD?", a: "Land is in high demand, scarce, and very valuable in the CBD, making it profitable to substitute capital (building height) for expensive land through factor substitution" },
+            { topic: "22", q: "What is a polycentric city?", a: "A city with multiple employment centers rather than a single CBD" },
+            { topic: "22", q: "What is the exemplar of modern polycentric cities in the U.S.?", a: "Los Angeles" },
+            { topic: "22", q: "How does access to public transportation affect where different income groups live?", a: "In cities with good public transit, affluent people may live in the center (e.g., Trump Tower NYC). In auto-dependent cities, they may live toward the edge (e.g., Phoenix)" },
+            { topic: "22", q: "How does an urban growth boundary affect bid rents?", a: "Every land parcel within the growth boundary becomes more valuable as development is restricted outside the boundary" },
+            { topic: "22", q: "Where are manufacturing corridors commonly located?", a: "Along transportation routes" }
+        ];
+
+        let cards = [...allCards];
+        let currentIndex = 0;
+        
+        function updateCard() {
+            const card = cards[currentIndex];
+            document.getElementById('question').textContent = card.q;
+            document.getElementById('answer').textContent = card.a;
+            document.getElementById('frontTopic').textContent = `Topic ${card.topic}`;
+            document.getElementById('backTopic').textContent = `Topic ${card.topic}`;
+            document.getElementById('current').textContent = currentIndex + 1;
+            document.getElementById('total').textContent = cards.length;
+            document.getElementById('flashcard').classList.remove('flipped');
+        }
+        
+        function nextCard() {
+            currentIndex = (currentIndex + 1) % cards.length;
+            updateCard();
+        }
+        
+        function prevCard() {
+            currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+            updateCard();
+        }
+        
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            currentIndex = 0;
+            updateCard();
+        }
+        
+        document.getElementById('flashcard').addEventListener('click', function() {
+            this.classList.toggle('flipped');
+        });
+        
+        document.getElementById('topicSelect').addEventListener('change', function() {
+            const topic = this.value;
+            if (topic === 'all') {
+                cards = [...allCards];
+            } else {
+                cards = allCards.filter(card => card.topic === topic);
+            }
+            currentIndex = 0;
+            updateCard();
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') nextCard();
+            if (e.key === 'ArrowLeft') prevCard();
+            if (e.key === ' ') {
+                e.preventDefault();
+                document.getElementById('flashcard').classList.toggle('flipped');
+            }
+        });
+        
+        updateCard();
+    </script>
+</body>
+</html>
